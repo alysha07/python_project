@@ -1,6 +1,8 @@
 import sqlite3
 from datetime import datetime
 from getpass import getpass
+import os
+import qrcode
 
 # ------------------ PAYMENT ------------------
 
@@ -11,36 +13,58 @@ class Payment:
 
 class CashPayment(Payment):
     def pay(self, amount):
-        given = float(input("Enter cash given: ₹"))
+        try:
+            given = float(input("Enter cash given: ₹"))
+        except ValueError:
+            print("❌ Invalid amount!")
+            return None
+
         if given < amount:
             print("❌ Not enough cash!")
             return None
+
         change = given - amount
-        return f"Cash | Paid: ₹{given} | Change: ₹{change}"
+        print(f"💰 Change to return: ₹{change:.2f}")
+
+        return f"Cash | Paid: ₹{given:.2f} | Change: ₹{change:.2f}"
 
 
 class UPIPayment(Payment):
     def pay(self, amount):
-        upi_id = input("Enter UPI ID: ")
-        pin = getpass("Enter UPI PIN (hidden): ")
+        import qrcode
 
-        if len(pin) < 4:
-            print("❌ Invalid PIN")
-            return None
+        print(f"\n📱 Scan QR to Pay ₹{amount:.2f}")
 
-        return f"UPI | ID: {upi_id} | Paid: ₹{amount}"
+        # 🔥 Replace with YOUR UPI details
+        upi_id = "9321646899@upi"
+        name = "Siddhi Iyer"
 
+        # UPI link with amount
+        upi_link = f"upi://pay?pa={upi_id}&pn={name}&am={amount:.2f}&cu=INR"
+
+        # Generate QR
+        img = qrcode.make(upi_link)
+        img.show()
+
+        input("Press Enter after payment...")
+
+        return f"UPI | Paid: ₹{amount:.2f}"
 
 class CardPayment(Payment):
     def pay(self, amount):
         card_no = input("Enter last 4 digits of card: ")
+
+        if not (card_no.isdigit() and len(card_no) == 4):
+            print("❌ Invalid card number")
+            return None
+
         pin = getpass("Enter Card PIN (hidden): ")
 
         if len(pin) < 4:
             print("❌ Invalid PIN")
             return None
 
-        return f"Card | XXXX-{card_no} | Paid: ₹{amount}"
+        return f"Card | XXXX-{card_no} | Paid: ₹{amount:.2f}"
 
 
 # ------------------ DATABASE ------------------
@@ -78,15 +102,13 @@ def calculate_bill(order, menu):
         subtotal += total
         bill_lines.append((item, qty, price, total))
 
-    # Discount
     discount = 0
     if subtotal > 500:
         discount = subtotal * 0.10
 
-    # GST
     taxable = subtotal - discount
     gst = taxable * 0.05
-    grand_total = round(taxable + gst)
+    grand_total = round(taxable + gst, 2)
 
     return subtotal, discount, gst, grand_total, bill_lines
 
@@ -126,16 +148,13 @@ def generate_bill(order, menu):
     conn = sqlite3.connect("restaurant.db")
     cursor = conn.cursor()
 
-    # Step 1: Show bill first
     subtotal, discount, gst, grand_total, bill_lines = show_bill(order, menu)
 
-    # Step 2: confirm
     confirm = input("\nProceed to payment? (y/n): ")
     if confirm.lower() != "y":
         print("❌ Order Cancelled\n")
         return
 
-    # Step 3: payment selection
     print("\nSelect Payment Method:")
     print("1. Cash\n2. UPI\n3. Card")
 
@@ -159,15 +178,11 @@ def generate_bill(order, menu):
         else:
             print("Retry payment...\n")
 
-    # Step 4: save items string
-    items_str = ""
-    for item, qty in order.items():
-        items_str += f"{item}({qty}) | "
+    # Save items string
+    items_str = " | ".join([f"{item}({qty})" for item, qty in order.items()])
 
-    # Step 5: date
     date = datetime.now().strftime("%d-%m-%Y %H:%M")
 
-    # Step 6: save to DB
     cursor.execute("""
     INSERT INTO orders
     (date, items, subtotal, discount, gst, grand_total, payment)
@@ -209,23 +224,6 @@ def generate_bill(order, menu):
     print(f"{'TOTAL:':<25}₹{grand_total:.2f}")
     print("-"*50)
     print(f"Payment: {payment_info}")
+    print("Status : ✅ PAID")
     print("="*50)
     print("🙏 Thank you! Visit again!\n")
-
-
-# ------------------ TEST RUN ------------------
-
-if __name__ == "__main__":
-
-    menu = {
-        "Biryani": 200,
-        "Burger": 120,
-        "Fries": 80,
-        "Coke": 50
-    }
-
-    order = {
-        "Biryani": 1
-    }
-
-    generate_bill(order, menu)

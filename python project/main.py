@@ -1,9 +1,10 @@
 # Restaurant Menu System
 from menu import MenuManagement
 from reservation import TableReservation
-
+from order import OrderSystem
 menu = MenuManagement()
 reservation_obj = TableReservation()
+order_system = OrderSystem(reservation_obj, menu)
 
 def main():
     while True:
@@ -31,7 +32,7 @@ def main():
                     menu.add_item()
 
                 elif admin_choice == 2:
-                    menu.show_menu()
+                    menu.display_menu()
 
                 elif admin_choice == 3:
                     menu.search_item()
@@ -78,12 +79,13 @@ def main():
                 if waiter_choice == 1:
                     reservation_obj.view_reservations()
                 elif waiter_choice == 2:
-                 take_order()
+                    order_system.take_order()
 
                 elif waiter_choice == 3:
                     break
                 else:
                     print("Invalid choice!")
+
 
         elif choice == 4:
             print("Exiting program...")

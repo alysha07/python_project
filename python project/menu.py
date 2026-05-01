@@ -145,6 +145,7 @@ class MenuManagement:
 
             if item_name and item_name.strip().lower() == search_name.strip().lower():
 
+                # ✅ Now variables are guaranteed to exist
                 new_name = input("Enter New Item Name: ")
 
                 try:
@@ -174,23 +175,27 @@ class MenuManagement:
 
                 new_category = category_dict[category_choice]
 
-                print("\nSelect Food Type:")
-                print("1. Veg")
-                print("2. Non-Veg")
+                new_food_type = "N/A"
 
-                food_choice = input("Enter Food Type Choice: ")
+                if category_choice in ["2", "3"]:
+                    print("\nSelect Food Type:")
+                    print("1. Veg")
+                    print("2. Non-Veg")
 
-                food_dict = {
-                    "1": "Veg",
-                    "2": "Non-Veg"
-                }
+                    food_choice = input("Enter Food Type Choice: ")
 
-                if food_choice not in food_dict:
-                    print("Invalid Food Type!\n")
-                    return
+                    food_dict = {
+                        "1": "Veg",
+                        "2": "Non-Veg"
+                    }
 
-                new_food_type = food_dict[food_choice]
+                    if food_choice not in food_dict:
+                        print("Invalid Food Type!\n")
+                        return
 
+                    new_food_type = food_dict[food_choice]
+
+                # ✅ Update ONLY inside this block
                 ws.cell(row=row, column=1).value = new_name
                 ws.cell(row=row, column=2).value = new_price
                 ws.cell(row=row, column=3).value = new_category
@@ -199,13 +204,13 @@ class MenuManagement:
                 updated = True
                 break
 
+        # ✅ Save after loop
         wb.save(self.__file_name)
 
         if updated:
             print("Item Updated Successfully!\n")
         else:
             print("Item Not Found!\n")
-
     # ---------- DELETE ITEM ----------
 
     def delete_item(self):

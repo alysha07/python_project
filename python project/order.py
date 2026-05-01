@@ -1,6 +1,7 @@
 import os
 from reservation import TableReservation
 from menu import MenuManagement
+from billing import generate_bill
 
 
 class OrderSystem:
@@ -37,7 +38,6 @@ class OrderSystem:
         # Step 2: Select table
         table = input("Enter Table Number: ")
 
-        # Create valid table list
         reserved_tables = [str(i + 1) for i in range(len(self.reservation_obj.reservations))]
 
         if table not in reserved_tables:
@@ -74,6 +74,34 @@ class OrderSystem:
 
         # Step 5: Save order
         self.save_order(order_id, customer_name, table, items)
+
+    # ================== BILLING PART ==================
+
+    # Convert Excel menu → dictionary
+        wb, ws = self.menu_obj.load_sheet()
+        menu_dict = {}
+
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            item_name, price, _, _ = row
+            if item_name:
+                menu_dict[item_name] = price
+
+        # Convert items list → dictionary
+        order_dict = {}
+
+        for item, qty in items:
+            match = next((key for key in menu_dict if key.lower() == item.lower()), None)
+
+            if match:
+                order_dict[match] = order_dict.get(match, 0) + qty
+            else:
+                print(f"❌ {item} not found in menu, skipped.")
+
+        # Generate bill
+        if order_dict:
+            generate_bill(order_dict, menu_dict)
+        else:
+            print("⚠️ No valid items to bill.")
 
     # ---------- SAVE ORDER ----------
     def save_order(self, order_id, name, table, items):
