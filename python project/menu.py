@@ -1,7 +1,8 @@
-from openpyxl import Workbook, load_workbook
 import os
+from openpyxl import Workbook, load_workbook
 
-FILE_NAME = "menu.xlsx"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FILE_NAME = os.path.join(BASE_DIR, "data", "menu.xlsx")
 
 
 # ---------- ENCAPSULATION ----------
@@ -14,11 +15,15 @@ class MenuManagement:
 
     # ---------- CREATE FILE ----------
     def create_file(self):
+        dir_path = os.path.dirname(self.__file_name)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+
         if not os.path.exists(self.__file_name):
-          wb = Workbook()
-          ws = wb.active
-          ws.append(["Item Name", "Price", "Category", "Food Type"])
-          wb.save(self.__file_name)
+            wb = Workbook()
+            ws = wb.active
+            ws.append(["Item Name", "Price", "Category", "Food Type"])
+            wb.save(self.__file_name)
     
     def add_item(self):
         wb, ws = self.load_sheet()
