@@ -18,7 +18,8 @@ def send_email(to_email, subject, body):
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "html"))
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
             server.login(EMAIL, PASSWORD)
             server.send_message(msg)
 
@@ -26,6 +27,8 @@ def send_email(to_email, subject, body):
 
     except Exception as e:
         print(f"❌ Could not send email: {e}")
+        print("Please check your EMAIL and PASSWORD in .env file.")
+        print("For Gmail, use an App Password if 2FA is enabled.")
 
 
 def reservation_confirmation_email(customer_name, customer_email, date, time, guests):
